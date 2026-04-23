@@ -5,9 +5,15 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.domain.AuditorAware;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+
+import java.util.Optional;
+import java.util.UUID;
 
 @Import(EventConfig.class)
 @SpringBootApplication(scanBasePackages = {"com.goggles"})
@@ -21,4 +27,9 @@ public class PaymentServiceApplication {
 		SpringApplication.run(PaymentServiceApplication.class, args);
 	}
 
+	@Bean
+	public AuditorAware<UUID> auditorAware() {
+		return () -> Optional.ofNullable(SecurityContextHolder.getContext())
+				.map(ctx -> UUID.fromString(ctx.getAuthentication().getName()));
+	}
 }
