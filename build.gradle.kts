@@ -24,6 +24,12 @@ repositories {
     }
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2025.0.2")
+    }
+}
+
 dependencies {
     // ── 공용 라이브러리 ───────────────────────────────
     implementation("com.goggles:common-library:1.0.0")
@@ -54,6 +60,9 @@ dependencies {
 
     // ── Kafka (선택적 — 소비자가 spring-kafka 없으면 KafkaAutoConfig 비활성) ──
     implementation("org.springframework.kafka:spring-kafka")
+
+    // eureka
+    implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
 
     // ── Test ─────────────────────────────────────────────────────────────────
     testImplementation("org.springframework.boot:spring-boot-starter-test")
