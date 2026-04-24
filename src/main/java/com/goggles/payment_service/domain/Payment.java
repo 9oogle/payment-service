@@ -80,5 +80,4 @@ public class Payment extends BaseAudit{
         }
         this.status = PaymentStatus.CANCEL;
     }
-    }
 }
