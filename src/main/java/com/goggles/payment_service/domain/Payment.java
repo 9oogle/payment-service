@@ -59,7 +59,7 @@ public class Payment extends BaseAudit{
             throw new IllegalStateException("READY 상태에서만 SUCESS로 전이 가능합니다.");
         }
         this.status = PaymentStatus.SUCCESS;
-        this.transactionId = transavtionId;
+        this.transactionId = transactionId;
         this.paidAt = LocalDateTime.now();
     }
 
@@ -79,5 +79,6 @@ public class Payment extends BaseAudit{
             throw new IllegalStateException("SUCCESS 상태에서만 CANCEL로 전이 가능합니다.");
         }
         this.status = PaymentStatus.CANCEL;
+    }
     }
 }
