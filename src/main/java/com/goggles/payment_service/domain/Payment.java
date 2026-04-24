@@ -54,17 +54,17 @@ public class Payment extends BaseAudit{
     }
 
     // READY -> SUCCESS
-    public void success(String transavtionId) {
+    public void success(String transactionId) {
         if (this.status != PaymentStatus.READY) {
-            throw new IllegalStateException("READY 상태에서만 SUCESS로 전이 가능합니다.");
+            throw new IllegalStateException("READY 상태에서만 SUCCESS로 전이 가능합니다.");
         }
         this.status = PaymentStatus.SUCCESS;
-        this.transactionId = transavtionId;
+        this.transactionId = transactionId;
         this.paidAt = LocalDateTime.now();
     }
 
     // READY -> FAIL
-    public void fail(String transactionId) {
+    public void fail(String transactionId, String failReason) {
         if (this.status != PaymentStatus.READY) {
             throw new IllegalStateException("READY 상태에서만 FAIL로 전이 가능합니다.");
         }
