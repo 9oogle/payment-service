@@ -66,6 +66,10 @@ dependencies {
     // eureka
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
 
+    // ── Lombok ──────────────────────────────────────────────────────────────
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+
     // ── Test ─────────────────────────────────────────────────────────────────
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-web")
