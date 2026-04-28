@@ -1,0 +1,124 @@
+package com.goggles.payment_service.application;
+
+import com.goggles.common.event.Events;
+import com.goggles.payment_service.domain.Payment;
+import com.goggles.payment_service.domain.PaymentRepository;
+import com.goggles.payment_service.domain.PaymentStatus;
+import com.goggles.payment_service.domain.event.PaymentCanceledEvent;
+import com.goggles.payment_service.domain.event.PaymentCompletedEvent;
+import com.goggles.payment_service.domain.event.PaymentFailedEvent;
+import com.goggles.payment_service.domain.event.PaymentRequestedEvent;
+import com.goggles.payment_service.domain.exception.DuplicatePaymentException;
+import com.goggles.payment_service.domain.exception.PaymentNotFoundException;
+import com.goggles.payment_service.infrastructure.toss.TossPaymentClient;
+import com.sun.jdi.request.DuplicateRequestException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Map;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class PaymentServiceImpl implements PaymentService{
+
+    private final PaymentRepository paymentRepository;
+    private final TossPaymentClient tossPaymentClient;
+    private final Events events;
+
+    // 결제 생성 (READY)
+    @Transactional
+    public Payment createPayment(UUID orderId, Long amount) {
+        // 중복 결제 방지
+        if (paymentRepository.existsByOrderIdAndStatus(orderId, PaymentStatus.SUCCESS)) {
+            throw new DuplicatePaymentException(orderId);
+        }
+
+        Payment payment = Payment.create(orderId, amount);
+        paymentRepository.save(payment);
+
+        events.trigger(
+                payment.getId().toString(),
+                "PAYMENT",
+                "payment-requested",
+                new PaymentRequestedEvent(
+                        payment.getId().toString(),
+                        payment.getId().toString(),
+                        orderId,
+                        amount
+                )
+        );
+
+        return payment;
+    }
+
+    // 결제 승인 (READY -> SUCCESS)
+    @Transactional
+    public Payment confirmPayment(UUID paymentId, String paymentKey) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+
+        try {
+            Map<String, Object> result = tossPaymentClient.confirm(
+                    paymentKey,
+                    payment.getOrderId().toString(),
+                    payment.getAmount().getAmount()
+            );
+
+            payment.success(paymentKey);
+
+            events.trigger(
+                    payment.getId().toString(),
+                    "PAYMENT",
+                    "payment-completed",
+                    new PaymentCompletedEvent(
+                            payment.getId().toString(),
+                            payment.getId().toString(),
+                            payment.getOrderId(),
+                            payment.getAmount().getAmount(),
+                            payment.getPaidAt()
+                    )
+            );
+        } catch (Exception e ) {
+            payment.fail(paymentKey, e.getMessage());
+
+            events.trigger(
+                    payment.getId().toString(),
+                    "PAYMENT",
+                    "payment-failed",
+                    new PaymentFailedEvent(
+                            payment.getId().toString(),
+                            payment.getId().toString(),
+                            payment.getOrderId(),
+                            e.getMessage()
+                    )
+            );
+        }
+
+        return payment;
+    }
+
+    // 결제 취소 (SUCCESS -> CANCEL)
+    @Transactional
+    public Payment cancelPayment(UUID paymentId, String cancelReason) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+
+        tossPaymentClient.cancel(payment.getTransactionId(), cancelReason);
+        payment.cancel();
+
+        events.trigger(
+                payment.getId().toString(),
+                "PAYMENT",
+                "payment-canceled",
+                new PaymentCanceledEvent(
+                        payment.getId().toString(),
+                        payment.getId().toString(),
+                        payment.getOrderId()
+                )
+        );
+
+        return payment;
+    }
+}
