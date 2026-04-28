@@ -1,4 +1,3 @@
 package com.goggles.payment_service.domain.event;
 
-public class PaymentFailedEvent {
-}
+public class PaymentFailedEvent {}

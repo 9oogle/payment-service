@@ -1,4 +1,3 @@
 package com.goggles.payment_service.presentation.dto;
 
-public class response {
-}
+public class response {}
