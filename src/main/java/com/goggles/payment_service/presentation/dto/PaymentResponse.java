@@ -12,7 +12,7 @@ import java.util.UUID;
 public class PaymentResponse {
 
     private final UUID id;
-    private final UUID orderID;
+    private final UUID orderId;
     private final Long amount;
     private final PaymentStatus status;
     private final PaymentMethod method;
@@ -22,7 +22,7 @@ public class PaymentResponse {
 
     private PaymentResponse(Payment payment) {
         this.id = payment.getId();
-        this.orderID = payment.getOrderId();
+        this.orderId = payment.getOrderId();
         this.amount = payment.getAmount().getAmount();
         this.status = payment.getStatus();
         this.method = payment.getMethod();
