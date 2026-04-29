@@ -61,7 +61,7 @@ public class TossApprovePayment implements ApprovePayment {
         } catch (RestClientResponseException e) {
             JsonNode result = e.getResponseBodyAs(JsonNode.class);
 
-            String code = UNLNOWN;
+            String code = UNKNOWN;
             String message = UNKNOWN;
             if (result != null) {
                 if (result.get("code") != null) {
