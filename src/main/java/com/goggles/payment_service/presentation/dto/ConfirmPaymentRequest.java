@@ -6,6 +6,6 @@ import lombok.Getter;
 @Getter
 public class ConfirmPaymentRequest {
 
-    @NotNull(message = "paymentKey는 필수입니다.")
-    private String paymentKey;
+  @NotNull(message = "paymentKey는 필수입니다.")
+  private String paymentKey;
 }
