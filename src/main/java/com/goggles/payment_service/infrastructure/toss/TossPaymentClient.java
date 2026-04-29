@@ -28,7 +28,7 @@ public class TossPaymentClient {
                     .uri(uriBuilder -> uriBuilder.path("/confirm").build())
                     .body(Map.of(
                             "paymentKey", paymentKey,
-                            "orderd", orderId,
+                            "orderId", orderId,
                             "amount", amount
                     ))
                     .header("Idempotency-Key", orderId)
@@ -79,7 +79,7 @@ public class TossPaymentClient {
                     e.getStatusCode().value(), paymentKey, code, message);
             throw new RuntimeException("[%s]%s".formatted(code, message));
         } catch (Exception e) {
-            log.error("토스 결제 취소 실패, PAyment Key: {}, 메러메세지: {}", paymentKey, e.getMessage());
+            log.error("토스 결제 취소 실패, Payment Key: {}, 메러메세지: {}", paymentKey, e.getMessage());
             throw new RuntimeException("[UNKNOWN]" + e.getMessage());
         }
     }
