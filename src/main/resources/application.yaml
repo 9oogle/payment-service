@@ -31,3 +31,10 @@ eureka:
     fetch-registry: true
     service-url:
       defaultZone: http://localhost:9001/eureka/,http://localhost:9002/eureka/
+
+toss:
+  secret-key: ${TOSS_SECRET_KEY:}
+  base-url: https://api.tosspayments.com/v1/payments
+
+server:
+  port: 9008
