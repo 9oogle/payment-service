@@ -10,8 +10,6 @@ import com.goggles.payment_service.domain.event.PaymentFailedEvent;
 import com.goggles.payment_service.domain.event.PaymentRequestedEvent;
 import com.goggles.payment_service.domain.exception.DuplicatePaymentException;
 import com.goggles.payment_service.domain.exception.PaymentNotFoundException;
-import com.goggles.payment_service.infrastructure.toss.TossPaymentClient;
-import com.sun.jdi.request.DuplicateRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
