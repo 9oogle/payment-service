@@ -10,16 +10,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Money {
 
-    private Long amount;
+  private Long amount;
 
-    public static Money of(Long amount) {
-        if (amount < 0) {
-            throw new IllegalArgumentException("결제 금액은 0원 이상이어야 합니다.");
-        }
-        return new Money(amount);
+  public static Money of(Long amount) {
+    if (amount < 0) {
+      throw new IllegalArgumentException("결제 금액은 0원 이상이어야 합니다.");
     }
+    return new Money(amount);
+  }
 
-    private Money(Long amount) {
-        this.amount = amount;
-    }
+  private Money(Long amount) {
+    this.amount = amount;
+  }
 }
