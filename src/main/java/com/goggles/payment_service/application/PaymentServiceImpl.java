@@ -14,10 +14,11 @@ import com.goggles.payment_service.domain.service.ApprovePayment;
 import com.goggles.payment_service.domain.service.ApproveResult;
 import com.goggles.payment_service.domain.service.CancelPayment;
 import com.goggles.payment_service.domain.service.CancelResult;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -104,6 +105,10 @@ public class PaymentServiceImpl implements PaymentService {
 
     CancelResult cancelResult =
         cancelPaymentService.cancel(paymentId.toString(), payment.getTransactionId(), cancelReason);
+
+    if (!cancelResult.isSuccess()) {
+      throw new IllegalStateException("결제 취소 실패: " + cancelResult.getFailReason());
+    }
 
     payment.cancel(cancelResult.getPaymentLog());
 
