@@ -16,8 +16,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TossCancelPayment implements CancelPayment {
 
-    private static final String UNKNOWN = "UNKNOWN";
-
     private final TossApiHelper tossApiHelper;
 
     @Override
@@ -45,24 +43,16 @@ public class TossCancelPayment implements CancelPayment {
         } catch (RestClientResponseException e) {
             JsonNode result = e.getResponseBodyAs(JsonNode.class);
 
-            String code = UNKNOWN;
-            String message = UNKNOWN;
+            String code = tossApiHelper.parseCode(result);
+            String message = tossApiHelper.parseMessage(result);
 
-            if (result != null) {
-                if (result.get("code") != null) {
-                    code = result.get("code").asText();
-                }
-                if (result.get("message") != null) {
-                    message = result.get("message").asText();
-                }
-            }
             log.error("토스 결제 취소 실패, HTTP 상태코드: {}, Payment Key: {}, 에러코드: {}, 에러메세지: {}",
                     e.getStatusCode().value(), paymentKey, code, message);
 
             return CancelResult.builder()
                     .success(false)
                     .failReason("[%s]%s".formatted(code, message))
-                    .paymentLog(result != null ? result.toString() : null)
+                    .paymentLog(tossApiHelper.parseLog(result))
                     .build();
 
         } catch (Exception e) {
