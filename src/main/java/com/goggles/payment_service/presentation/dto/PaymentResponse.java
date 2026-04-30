@@ -3,10 +3,9 @@ package com.goggles.payment_service.presentation.dto;
 import com.goggles.payment_service.domain.Payment;
 import com.goggles.payment_service.domain.PaymentMethod;
 import com.goggles.payment_service.domain.PaymentStatus;
-import lombok.Getter;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.Getter;
 
 @Getter
 public class PaymentResponse {
