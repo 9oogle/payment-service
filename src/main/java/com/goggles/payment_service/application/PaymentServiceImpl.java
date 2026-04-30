@@ -13,6 +13,7 @@ import com.goggles.payment_service.domain.exception.PaymentNotFoundException;
 import com.goggles.payment_service.domain.service.ApprovePayment;
 import com.goggles.payment_service.domain.service.ApproveResult;
 import com.goggles.payment_service.domain.service.CancelPayment;
+import com.goggles.payment_service.domain.service.CancelResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,7 +69,7 @@ public class PaymentServiceImpl implements PaymentService{
         );
 
         if (result.isSuccess()) {
-            payment.success(paymentKey);
+            payment.success(paymentKey, result.getPaymentLog());
 
             events.trigger(
                     payment.getId().toString(),
@@ -83,7 +84,7 @@ public class PaymentServiceImpl implements PaymentService{
                     )
             );
         } else {
-            payment.fail(paymentKey, result.getFailReason());
+            payment.fail(paymentKey, result.getFailReason(), result.getPaymentLog());
 
             events.trigger(
                     payment.getId().toString(),
@@ -107,13 +108,13 @@ public class PaymentServiceImpl implements PaymentService{
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentNotFoundException(paymentId));
 
-        cancelPaymentService.cancel(
+        CancelResult cancelResult = cancelPaymentService.cancel(
                 paymentId.toString(),
                 payment.getTransactionId(),
                 cancelReason
         );
 
-        payment.cancel();
+        payment.cancel(cancelResult.getPaymentLog());
 
         events.trigger(
                 payment.getId().toString(),

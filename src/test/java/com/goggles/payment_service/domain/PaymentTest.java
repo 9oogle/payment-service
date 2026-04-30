@@ -1,11 +1,11 @@
 package com.goggles.payment_service.domain;
 
-import static com.goggles.payment_service.domain.PaymentFixture.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static com.goggles.payment_service.domain.PaymentFixture.createReadyPayment;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class PaymentTest {
 
@@ -27,7 +27,7 @@ public class PaymentTest {
 
   @Test
   void 결제_성공_상태전이() {
-    payment.success("test_transaction_key");
+    payment.success("test_transaction_key", null);
 
     assertThat(payment.getStatus()).isEqualTo(PaymentStatus.SUCCESS);
     assertThat(payment.getTransactionId()).isEqualTo("test_transaction_key");
@@ -36,7 +36,7 @@ public class PaymentTest {
 
   @Test
   void 결제_실패_상태전이() {
-    payment.fail("test_transaction_key", "잔액 부족");
+    payment.fail("test_transaction_key", "잔액 부족", null);
 
     assertThat(payment.getStatus()).isEqualTo(PaymentStatus.FAIL);
     assertThat(payment.getTransactionId()).isEqualTo("test_transaction_key");
@@ -45,31 +45,31 @@ public class PaymentTest {
 
   @Test
   void 결제_취소_상태전이() {
-    payment.success("test_transaction_key");
-    payment.cancel();
+    payment.success("test_transaction_key", null);
+    payment.cancel(null);
 
     assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CANCEL);
   }
 
   @Test
   void READY_아닌_상태에서_success_호출시_예외() {
-    payment.fail("test_transaction_key", "잔액 부족");
+    payment.fail("test_transaction_key", "잔액 부족", null);
 
-    assertThatThrownBy(() -> payment.success("test_transaction_key"))
+    assertThatThrownBy(() -> payment.success("test_transaction_key", null))
         .isInstanceOf(IllegalStateException.class);
   }
 
   @Test
   void READY_아닌_상태에서_fail_호출시_예외() {
-    payment.success("test_transaction_key");
+    payment.success("test_transaction_key", null);
 
-    assertThatThrownBy(() -> payment.fail("test_transaction_key", "잔액 부족"))
+    assertThatThrownBy(() -> payment.fail("test_transaction_key", "잔액 부족", null))
         .isInstanceOf(IllegalStateException.class);
   }
 
   @Test
   void SUCCESS_아닌_상태에서_cancel_호출시_예외() {
-    assertThatThrownBy(() -> payment.cancel()).isInstanceOf(IllegalStateException.class);
+    assertThatThrownBy(() -> payment.cancel(null)).isInstanceOf(IllegalStateException.class);
   }
 
   @Test
