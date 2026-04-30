@@ -56,7 +56,7 @@ public class Payment extends BaseTime {
   }
 
   // READY -> SUCCESS
-  public void success(String transactionId) {
+  public void success(String transactionId, String paymentLog) {
     if (this.status != PaymentStatus.READY) {
       throw new IllegalStateException("READY 상태에서만 SUCCESS로 전이 가능합니다.");
     }
@@ -67,7 +67,7 @@ public class Payment extends BaseTime {
   }
 
   // READY -> FAIL
-  public void fail(String transactionId, String failReason) {
+  public void fail(String transactionId, String failReason, String paymentLog) {
     if (this.status != PaymentStatus.READY) {
       throw new IllegalStateException("READY 상태에서만 FAIL로 전이 가능합니다.");
     }
@@ -78,7 +78,7 @@ public class Payment extends BaseTime {
   }
 
   // SUCCESS -> CANCEL
-  public void cancel() {
+  public void cancel(String paymentLog) {
     if (this.status != PaymentStatus.SUCCESS) {
       throw new IllegalStateException("SUCCESS 상태에서만 CANCEL로 전이 가능합니다.");
     }
