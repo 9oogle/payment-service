@@ -11,12 +11,12 @@ import com.goggles.payment_service.domain.event.PaymentRequestedEvent;
 import com.goggles.payment_service.domain.exception.DuplicatePaymentException;
 import com.goggles.payment_service.domain.exception.PaymentNotFoundException;
 import com.goggles.payment_service.domain.service.ApprovePayment;
+import com.goggles.payment_service.domain.service.ApproveResult;
 import com.goggles.payment_service.domain.service.CancelPayment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -25,7 +25,7 @@ public class PaymentServiceImpl implements PaymentService{
 
     private final PaymentRepository paymentRepository;
     private final ApprovePayment approvePayment;
-    private final CancelPayment cancelPayment;
+    private final CancelPayment cancelPaymentService;
     private final Events events;
 
     // 결제 생성 (READY)
@@ -60,7 +60,7 @@ public class PaymentServiceImpl implements PaymentService{
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentNotFoundException(paymentId));
 
-        ApprovePayment result = approvePayment.request(
+        ApproveResult result = approvePayment.request(
                 paymentId.toString(),
                 paymentKey,
                 payment.getOrderId().toString(),
@@ -107,7 +107,7 @@ public class PaymentServiceImpl implements PaymentService{
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentNotFoundException(paymentId));
 
-        cnacelPayment.cancel(
+        cancelPaymentService.cancel(
                 paymentId.toString(),
                 payment.getTransactionId(),
                 cancelReason
