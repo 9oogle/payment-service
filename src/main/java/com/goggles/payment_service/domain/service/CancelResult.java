@@ -7,7 +7,7 @@ import lombok.Getter;
 @Builder
 public class CancelResult {
 
-    private final boolean success;
-    private final String failReason;
-    private final String paymentLog;
+  private final boolean success;
+  private final String failReason;
+  private final String paymentLog;
 }
