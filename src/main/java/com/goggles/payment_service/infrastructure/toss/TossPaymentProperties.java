@@ -11,6 +11,6 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "toss")
 public class TossPaymentProperties {
 
-    private String secretKey;
-    private String baseUrl;
+  private String secretKey;
+  private String baseUrl;
 }
