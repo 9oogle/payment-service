@@ -10,6 +10,8 @@ import com.goggles.payment_service.domain.event.PaymentFailedEvent;
 import com.goggles.payment_service.domain.event.PaymentRequestedEvent;
 import com.goggles.payment_service.domain.exception.DuplicatePaymentException;
 import com.goggles.payment_service.domain.exception.PaymentNotFoundException;
+import com.goggles.payment_service.domain.service.ApprovePayment;
+import com.goggles.payment_service.domain.service.CancelPayment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +24,8 @@ import java.util.UUID;
 public class PaymentServiceImpl implements PaymentService{
 
     private final PaymentRepository paymentRepository;
-    private final TossPaymentClient tossPaymentClient;
+    private final ApprovePayment approvePayment;
+    private final CancelPayment cancelPayment;
     private final Events events;
 
     // 결제 생성 (READY)
@@ -57,13 +60,14 @@ public class PaymentServiceImpl implements PaymentService{
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentNotFoundException(paymentId));
 
-        try {
-            Map<String, Object> result = tossPaymentClient.confirm(
-                    paymentKey,
-                    payment.getOrderId().toString(),
-                    payment.getAmount().getAmount()
-            );
+        ApprovePayment result = approvePayment.request(
+                paymentId.toString(),
+                paymentKey,
+                payment.getOrderId().toString(),
+                payment.getAmount().getAmount()
+        );
 
+        if (result.isSuccess()) {
             payment.success(paymentKey);
 
             events.trigger(
@@ -78,8 +82,8 @@ public class PaymentServiceImpl implements PaymentService{
                             payment.getPaidAt()
                     )
             );
-        } catch (Exception e ) {
-            payment.fail(paymentKey, e.getMessage());
+        } else {
+            payment.fail(paymentKey, result.getFailReason());
 
             events.trigger(
                     payment.getId().toString(),
@@ -89,7 +93,7 @@ public class PaymentServiceImpl implements PaymentService{
                             payment.getId().toString(),
                             payment.getId().toString(),
                             payment.getOrderId(),
-                            e.getMessage()
+                            payment.getFailReason()
                     )
             );
         }
@@ -103,7 +107,12 @@ public class PaymentServiceImpl implements PaymentService{
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentNotFoundException(paymentId));
 
-        tossPaymentClient.cancel(payment.getTransactionId(), cancelReason);
+        cnacelPayment.cancel(
+                paymentId.toString(),
+                payment.getTransactionId(),
+                cancelReason
+        );
+
         payment.cancel();
 
         events.trigger(
