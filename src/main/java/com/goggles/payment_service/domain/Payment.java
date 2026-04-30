@@ -60,6 +60,9 @@ public class Payment extends BaseTime {
     if (this.status != PaymentStatus.READY) {
       throw new IllegalStateException("READY 상태에서만 SUCCESS로 전이 가능합니다.");
     }
+    if (transactionId == null || transactionId.isBlank()) {
+      throw new IllegalArgumentException("transactionId는 필수입니다.");
+    }
     this.status = PaymentStatus.SUCCESS;
     this.transactionId = transactionId;
     this.paidAt = LocalDateTime.now();
@@ -70,6 +73,12 @@ public class Payment extends BaseTime {
   public void fail(String transactionId, String failReason, String paymentLog) {
     if (this.status != PaymentStatus.READY) {
       throw new IllegalStateException("READY 상태에서만 FAIL로 전이 가능합니다.");
+    }
+    if (transactionId == null || transactionId.isBlank()) {
+      throw new IllegalArgumentException("transactionId는 필수입니다.");
+    }
+    if (failReason == null || failReason.isBlank()) {
+      throw new IllegalArgumentException("failReason은 필수입니다.");
     }
     this.status = PaymentStatus.FAIL;
     this.transactionId = transactionId;
