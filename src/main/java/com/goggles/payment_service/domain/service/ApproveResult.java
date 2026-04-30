@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class ApproveResult {
 
     private final boolean success;
-    private final String paymentId;
+    private final String paymentKey;
     private final String failReason;
     private final LocalDateTime approveAt;
     private final String paymentLog;

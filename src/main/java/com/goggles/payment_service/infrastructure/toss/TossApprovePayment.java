@@ -18,8 +18,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TossApprovePayment implements ApprovePayment {
 
-    private static final String UNKNOWN = "UNKNOWN";
-
     private final TossApiHelper tossApiHelper;
 
     @Override
@@ -55,22 +53,14 @@ public class TossApprovePayment implements ApprovePayment {
             return ApproveResult.builder()
                     .success(true)
                     .paymentKey(paymentKey)
-                    .approvedAt(approvedAt)
-                    .paymentLog(result == null ? null : result.toString())
+                    .approveAt(approvedAt)
+                    .paymentLog(tossApiHelper.parseLog(result))
                     .build();
+
         } catch (RestClientResponseException e) {
             JsonNode result = e.getResponseBodyAs(JsonNode.class);
-
-            String code = UNKNOWN;
-            String message = UNKNOWN;
-            if (result != null) {
-                if (result.get("code") != null) {
-                    code = result.get("code").asText();
-                }
-                if (result.get("message") != null) {
-                    message = result.get("message").asText();
-                }
-            }
+            String code = tossApiHelper.parseCode(result);
+            String message = tossApiHelper.parseMessage(result);
 
             log.error("토스 결제 승인 실패, HTTP 상태코드: {}, 주문 ID: {}, 에러코드: {}, 에러메세지: {}",
                     e.getStatusCode().value(), orderId, code, message);
@@ -78,8 +68,9 @@ public class TossApprovePayment implements ApprovePayment {
             return ApproveResult.builder()
                     .success(false)
                     .failReason("[%s]%s".formatted(code, message))
-                    .paymentLog(result == null ? null : result.toString())
+                    .paymentLog(tossApiHelper.parseLog(result))
                     .build();
+
         } catch (Exception e) {
             log.error("토스 결제 승인 실패, 주문 Id: {}, 에러메세지: {}",
                     orderId, e.getMessage());
