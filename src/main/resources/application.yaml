@@ -38,3 +38,18 @@ toss:
 
 server:
   port: 9008
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: 0.1
+  zipkin:
+    tracing:
+      endpoint: http://34.50.39.161:9411/api/v2/spans
