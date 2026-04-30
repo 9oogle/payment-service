@@ -2,11 +2,12 @@ package com.goggles.payment_service.domain;
 
 import com.goggles.common.domain.BaseTime;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
-import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -41,6 +42,9 @@ public class Payment extends BaseTime {
   @Column(name = "paid_at")
   private LocalDateTime paidAt;
 
+  @Column(name = "payment_log", columnDefinition = "TEXT")
+  private String paymentLog;
+
   // 생성
   public static Payment create(UUID orderId, Long amount) {
     Payment payment = new Payment();
@@ -59,6 +63,7 @@ public class Payment extends BaseTime {
     this.status = PaymentStatus.SUCCESS;
     this.transactionId = transactionId;
     this.paidAt = LocalDateTime.now();
+    this.paymentLog = paymentLog;
   }
 
   // READY -> FAIL
@@ -69,6 +74,7 @@ public class Payment extends BaseTime {
     this.status = PaymentStatus.FAIL;
     this.transactionId = transactionId;
     this.failReason = failReason;
+    this.paymentLog = paymentLog;
   }
 
   // SUCCESS -> CANCEL
@@ -77,5 +83,6 @@ public class Payment extends BaseTime {
       throw new IllegalStateException("SUCCESS 상태에서만 CANCEL로 전이 가능합니다.");
     }
     this.status = PaymentStatus.CANCEL;
+    this.paymentLog = paymentLog;
   }
 }
