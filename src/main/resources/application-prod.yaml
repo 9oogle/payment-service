@@ -11,8 +11,4 @@ management:
       probability: 0.1
   zipkin:
     tracing:
-      endpoint: http://34.50.39.161:9411/api/v2/spans
-
-spring:
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+      endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}
