@@ -1,15 +1,20 @@
 package com.goggles.payment_service.domain.event;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
-import lombok.Getter;
 
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class PaymentCompletedEvent extends DomainEvent {
 
-  private final UUID orderId;
-  private final Long amount;
-  private final LocalDateTime paidAt;
+  private UUID orderId;
+  private Long amount;
+  private LocalDateTime paidAt;
 
   public PaymentCompletedEvent(
       String aggregateId, String correlationId, UUID orderId, Long amount, LocalDateTime paidAt) {
