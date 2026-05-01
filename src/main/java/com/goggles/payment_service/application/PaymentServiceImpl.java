@@ -41,11 +41,11 @@ public class PaymentServiceImpl implements PaymentService {
     paymentRepository.save(payment);
 
     events.trigger(
-        payment.getId().toString(),
+        payment.getOrderId().toString(),
         "PAYMENT",
         "payment-requested",
         new PaymentRequestedEvent(
-            payment.getId().toString(), payment.getId().toString(), orderId, amount));
+            payment.getId().toString(), payment.getOrderId().toString(), orderId, amount));
 
     return payment;
   }
@@ -69,12 +69,12 @@ public class PaymentServiceImpl implements PaymentService {
       payment.success(paymentKey, result.getPaymentLog());
 
       events.trigger(
-          payment.getId().toString(),
+          payment.getOrderId().toString(),
           "PAYMENT",
           "payment-completed",
           new PaymentCompletedEvent(
               payment.getId().toString(),
-              payment.getId().toString(),
+              payment.getOrderId().toString(),
               payment.getOrderId(),
               payment.getAmount().getAmount(),
               payment.getPaidAt()));
@@ -82,12 +82,12 @@ public class PaymentServiceImpl implements PaymentService {
       payment.fail(paymentKey, result.getFailReason(), result.getPaymentLog());
 
       events.trigger(
-          payment.getId().toString(),
+          payment.getOrderId().toString(),
           "PAYMENT",
           "payment-failed",
           new PaymentFailedEvent(
               payment.getId().toString(),
-              payment.getId().toString(),
+              payment.getOrderId().toString(),
               payment.getOrderId(),
               payment.getFailReason()));
     }
@@ -113,11 +113,11 @@ public class PaymentServiceImpl implements PaymentService {
     payment.cancel(cancelResult.getPaymentLog());
 
     events.trigger(
-        payment.getId().toString(),
+        payment.getOrderId().toString(),
         "PAYMENT",
         "payment-canceled",
         new PaymentCanceledEvent(
-            payment.getId().toString(), payment.getId().toString(), payment.getOrderId()));
+            payment.getId().toString(), payment.getOrderId().toString(), payment.getOrderId()));
 
     return payment;
   }

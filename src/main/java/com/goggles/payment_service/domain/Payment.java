@@ -94,4 +94,7 @@ public class Payment extends BaseTime {
     this.status = PaymentStatus.CANCEL;
     this.paymentLog = paymentLog;
   }
+
+  public Object getORder() {
+  }
 }
