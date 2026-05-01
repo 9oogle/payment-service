@@ -41,6 +41,9 @@ public class Payment extends BaseTime {
   @Column(name = "paid_at")
   private LocalDateTime paidAt;
 
+  @Column(name = "payment_log", columnDefinition = "TEXT")
+  private String paymentLog;
+
   // 생성
   public static Payment create(UUID orderId, Long amount) {
     Payment payment = new Payment();
@@ -52,30 +55,44 @@ public class Payment extends BaseTime {
   }
 
   // READY -> SUCCESS
-  public void success(String transactionId) {
+  public void success(String transactionId, String paymentLog) {
     if (this.status != PaymentStatus.READY) {
       throw new IllegalStateException("READY 상태에서만 SUCCESS로 전이 가능합니다.");
+    }
+    if (transactionId == null || transactionId.isBlank()) {
+      throw new IllegalArgumentException("transactionId는 필수입니다.");
     }
     this.status = PaymentStatus.SUCCESS;
     this.transactionId = transactionId;
     this.paidAt = LocalDateTime.now();
+    this.paymentLog = paymentLog;
   }
 
   // READY -> FAIL
-  public void fail(String transactionId, String failReason) {
+  public void fail(String transactionId, String failReason, String paymentLog) {
     if (this.status != PaymentStatus.READY) {
       throw new IllegalStateException("READY 상태에서만 FAIL로 전이 가능합니다.");
+    }
+    if (transactionId == null || transactionId.isBlank()) {
+      throw new IllegalArgumentException("transactionId는 필수입니다.");
+    }
+    if (failReason == null || failReason.isBlank()) {
+      throw new IllegalArgumentException("failReason은 필수입니다.");
     }
     this.status = PaymentStatus.FAIL;
     this.transactionId = transactionId;
     this.failReason = failReason;
+    this.paymentLog = paymentLog;
   }
 
   // SUCCESS -> CANCEL
-  public void cancel() {
+  public void cancel(String paymentLog) {
     if (this.status != PaymentStatus.SUCCESS) {
       throw new IllegalStateException("SUCCESS 상태에서만 CANCEL로 전이 가능합니다.");
     }
     this.status = PaymentStatus.CANCEL;
+    this.paymentLog = paymentLog;
   }
+
+  public Object getORder() {}
 }

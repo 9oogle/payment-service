@@ -10,8 +10,10 @@ import com.goggles.payment_service.domain.event.PaymentFailedEvent;
 import com.goggles.payment_service.domain.event.PaymentRequestedEvent;
 import com.goggles.payment_service.domain.exception.DuplicatePaymentException;
 import com.goggles.payment_service.domain.exception.PaymentNotFoundException;
-import com.goggles.payment_service.infrastructure.toss.TossPaymentClient;
-import java.util.Map;
+import com.goggles.payment_service.domain.service.ApprovePayment;
+import com.goggles.payment_service.domain.service.ApproveResult;
+import com.goggles.payment_service.domain.service.CancelPayment;
+import com.goggles.payment_service.domain.service.CancelResult;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,7 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class PaymentServiceImpl implements PaymentService {
 
   private final PaymentRepository paymentRepository;
-  private final TossPaymentClient tossPaymentClient;
+  private final ApprovePayment approvePayment;
+  private final CancelPayment cancelPaymentService;
   private final Events events;
 
   // 결제 생성 (READY)
@@ -37,11 +40,11 @@ public class PaymentServiceImpl implements PaymentService {
     paymentRepository.save(payment);
 
     events.trigger(
-        payment.getId().toString(),
+        payment.getOrderId().toString(),
         "PAYMENT",
         "payment-requested",
         new PaymentRequestedEvent(
-            payment.getId().toString(), payment.getId().toString(), orderId, amount));
+            payment.getId().toString(), payment.getOrderId().toString(), orderId, amount));
 
     return payment;
   }
@@ -54,35 +57,38 @@ public class PaymentServiceImpl implements PaymentService {
             .findById(paymentId)
             .orElseThrow(() -> new PaymentNotFoundException(paymentId));
 
-    try {
-      Map<String, Object> result =
-          tossPaymentClient.confirm(
-              paymentKey, payment.getOrderId().toString(), payment.getAmount().getAmount());
+    ApproveResult result =
+        approvePayment.request(
+            paymentId.toString(),
+            paymentKey,
+            payment.getOrderId().toString(),
+            payment.getAmount().getAmount());
 
-      payment.success(paymentKey);
+    if (result.isSuccess()) {
+      payment.success(paymentKey, result.getPaymentLog());
 
       events.trigger(
-          payment.getId().toString(),
+          payment.getOrderId().toString(),
           "PAYMENT",
           "payment-completed",
           new PaymentCompletedEvent(
               payment.getId().toString(),
-              payment.getId().toString(),
+              payment.getOrderId().toString(),
               payment.getOrderId(),
               payment.getAmount().getAmount(),
               payment.getPaidAt()));
-    } catch (Exception e) {
-      payment.fail(paymentKey, e.getMessage());
+    } else {
+      payment.fail(paymentKey, result.getFailReason(), result.getPaymentLog());
 
       events.trigger(
-          payment.getId().toString(),
+          payment.getOrderId().toString(),
           "PAYMENT",
           "payment-failed",
           new PaymentFailedEvent(
               payment.getId().toString(),
-              payment.getId().toString(),
+              payment.getOrderId().toString(),
               payment.getOrderId(),
-              e.getMessage()));
+              payment.getFailReason()));
     }
 
     return payment;
@@ -96,15 +102,21 @@ public class PaymentServiceImpl implements PaymentService {
             .findById(paymentId)
             .orElseThrow(() -> new PaymentNotFoundException(paymentId));
 
-    tossPaymentClient.cancel(payment.getTransactionId(), cancelReason);
-    payment.cancel();
+    CancelResult cancelResult =
+        cancelPaymentService.cancel(paymentId.toString(), payment.getTransactionId(), cancelReason);
+
+    if (!cancelResult.isSuccess()) {
+      throw new IllegalStateException("결제 취소 실패: " + cancelResult.getFailReason());
+    }
+
+    payment.cancel(cancelResult.getPaymentLog());
 
     events.trigger(
-        payment.getId().toString(),
+        payment.getOrderId().toString(),
         "PAYMENT",
         "payment-canceled",
         new PaymentCanceledEvent(
-            payment.getId().toString(), payment.getId().toString(), payment.getOrderId()));
+            payment.getId().toString(), payment.getOrderId().toString(), payment.getOrderId()));
 
     return payment;
   }

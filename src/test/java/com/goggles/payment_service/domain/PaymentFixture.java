@@ -13,13 +13,13 @@ public class PaymentFixture {
 
   public static Payment createSuccessPayment() {
     Payment payment = Payment.create(ORDER_ID, AMOUNT);
-    payment.success("test_transaction_key");
+    payment.success("test_transaction_key", null);
     return payment;
   }
 
   public static Payment createFailPayment() {
     Payment payment = Payment.create(ORDER_ID, AMOUNT);
-    payment.fail("test_transaction_key", "잔액 부족");
+    payment.fail("test_transaction_key", "잔액 부족", null);
     return payment;
   }
 }

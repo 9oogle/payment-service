@@ -18,6 +18,7 @@ public class PaymentResponse {
   private final String transactionId;
   private final String failReason;
   private final LocalDateTime paidAt;
+  private final String paymentLog;
 
   private PaymentResponse(Payment payment) {
     this.id = payment.getId();
@@ -28,6 +29,7 @@ public class PaymentResponse {
     this.transactionId = payment.getTransactionId();
     this.failReason = payment.getFailReason();
     this.paidAt = payment.getPaidAt();
+    this.paymentLog = payment.getPaymentLog();
   }
 
   public static PaymentResponse from(Payment payment) {

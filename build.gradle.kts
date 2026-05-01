@@ -33,7 +33,7 @@ dependencyManagement {
 
 dependencies {
     // ── 공용 라이브러리 ───────────────────────────────
-    implementation("com.goggles:common-library:1.0.0")
+    implementation("com.goggles:common-library:1.0.3")
 
     implementation ("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -70,6 +70,10 @@ dependencies {
     // ── Lombok ──────────────────────────────────────────────────────────────
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
+
+    // Micrometer Tracing
+    implementation("io.micrometer:micrometer-tracing-bridge-brave")
+    implementation("io.zipkin.reporter2:zipkin-reporter-brave")
 
     // ── Test ─────────────────────────────────────────────────────────────────
     testImplementation("org.springframework.boot:spring-boot-starter-test")
