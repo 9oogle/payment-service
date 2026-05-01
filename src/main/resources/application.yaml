@@ -58,4 +58,4 @@ management:
       probability: 0.1
   zipkin:
     tracing:
-      endpoint: http://***REMOVED***:9411/api/v2/spans
+      endpoint: http://34.50.39.161:9411/api/v2/spans

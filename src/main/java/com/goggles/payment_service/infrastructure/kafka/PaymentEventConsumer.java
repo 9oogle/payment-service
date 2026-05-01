@@ -3,6 +3,7 @@ package com.goggles.payment_service.infrastructure.kafka;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.goggles.common.event.annotation.IdempotentConsumer;
 import com.goggles.payment_service.application.PaymentService;
+import com.goggles.payment_service.domain.PaymentMethod;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -25,7 +26,7 @@ public class PaymentEventConsumer {
             log.info("주문 결제 요청 이벤트 수신, kwy: {}", record.key());
 
             OrderEventDto event = objectMapper.readValue(record.value(), OrderEventDto.class);
-            paymentService.createPayment(event.getOrderID(), event.getAmount());
+            PaymentMethod method = PaymentMethod.valueOf(event.getPaymentMethod());
         } catch (Exception e ) {
             log.error("주문 결제 요청 이벤트 처리 실패, key: {}, error: {}", record.key(), e.getMessage());
             throw new RuntimeException(e);

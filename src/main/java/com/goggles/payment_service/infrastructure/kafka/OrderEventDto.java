@@ -12,7 +12,9 @@ import java.util.UUID;
 public class OrderEventDto {
 
     private UUID orderID;
+    private UUID userId;
     private Long amount;
+    private String paymentMethod;
 }
 
 

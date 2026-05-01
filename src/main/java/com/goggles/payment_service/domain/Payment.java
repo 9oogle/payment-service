@@ -46,12 +46,12 @@ public class Payment extends BaseTime {
   private String paymentLog;
 
   // 생성
-  public static Payment create(UUID orderId, Long amount) {
+  public static Payment create(UUID orderId, Long amount, PaymentMethod method) {
     Payment payment = new Payment();
     payment.orderId = orderId;
     payment.amount = Money.of(amount);
     payment.status = PaymentStatus.READY;
-    payment.method = PaymentMethod.TOSS;
+    payment.method = method;
     return payment;
   }
 

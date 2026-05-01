@@ -2,6 +2,7 @@ package com.goggles.payment_service.application;
 
 import com.goggles.common.event.Events;
 import com.goggles.payment_service.domain.Payment;
+import com.goggles.payment_service.domain.PaymentMethod;
 import com.goggles.payment_service.domain.PaymentRepository;
 import com.goggles.payment_service.domain.PaymentStatus;
 import com.goggles.payment_service.domain.event.PaymentCanceledEvent;
@@ -14,10 +15,11 @@ import com.goggles.payment_service.domain.service.ApprovePayment;
 import com.goggles.payment_service.domain.service.ApproveResult;
 import com.goggles.payment_service.domain.service.CancelPayment;
 import com.goggles.payment_service.domain.service.CancelResult;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -30,13 +32,13 @@ public class PaymentServiceImpl implements PaymentService {
 
   // 결제 생성 (READY)
   @Transactional
-  public Payment createPayment(UUID orderId, Long amount) {
+  public Payment createPayment(UUID orderId, Long amount, PaymentMethod method) {
     // 중복 결제 방지
     if (paymentRepository.existsByOrderIdAndStatus(orderId, PaymentStatus.SUCCESS)) {
       throw new DuplicatePaymentException(orderId);
     }
 
-    Payment payment = Payment.create(orderId, amount);
+    Payment payment = Payment.create(orderId, amount, method);
     paymentRepository.save(payment);
 
     events.trigger(

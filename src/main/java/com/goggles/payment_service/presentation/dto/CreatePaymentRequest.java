@@ -1,9 +1,11 @@
 package com.goggles.payment_service.presentation.dto;
 
+import com.goggles.payment_service.domain.PaymentMethod;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import java.util.UUID;
 import lombok.Getter;
+
+import java.util.UUID;
 
 @Getter
 public class CreatePaymentRequest {
@@ -14,4 +16,7 @@ public class CreatePaymentRequest {
   @NotNull(message = "결제 금액은 필수입니다.")
   @Min(value = 0, message = "결제 금액은 0원 이상이어야 합니다.")
   private Long amount;
+
+  @NotNull(message = "결제 수단은 필수입니다.")
+  private PaymentMethod paymentMethod;
 }
