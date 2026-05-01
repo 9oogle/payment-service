@@ -1,13 +1,18 @@
 package com.goggles.payment_service.domain.event;
 
-import java.util.UUID;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
 
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class PaymentFailedEvent extends DomainEvent {
 
-  private final UUID orderId;
-  private final String failReason;
+  private UUID orderId;
+  private String failReason;
 
   public PaymentFailedEvent(
       String aggregateId, String correlationId, UUID orderId, String failReason) {

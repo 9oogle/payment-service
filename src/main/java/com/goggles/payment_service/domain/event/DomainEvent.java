@@ -1,17 +1,22 @@
 package com.goggles.payment_service.domain.event;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
-import lombok.Getter;
 
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public abstract class DomainEvent {
 
-  private final String eventId;
-  private final LocalDateTime occurredAt;
-  private final String eventType;
-  private final String aggregateId;
-  private final String correlationId;
+  private String eventId;
+  private LocalDateTime occurredAt;
+  private String eventType;
+  private String aggregateId;
+  private String correlationId;
 
   protected DomainEvent(String eventType, String aggregateId, String correlationId) {
     this.eventId = UUID.randomUUID().toString();
