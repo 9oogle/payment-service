@@ -6,11 +6,10 @@ import com.goggles.payment_service.presentation.dto.ConfirmPaymentRequest;
 import com.goggles.payment_service.presentation.dto.CreatePaymentRequest;
 import com.goggles.payment_service.presentation.dto.PaymentResponse;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/payments")
@@ -23,7 +22,9 @@ public class PaymentController {
   @PostMapping
   public ResponseEntity<PaymentResponse> createPayment(
       @Valid @RequestBody CreatePaymentRequest request) {
-    Payment payment = paymentService.createPayment(request.getOrderId(), request.getAmount(), request.getPaymentMethod());
+    Payment payment =
+        paymentService.createPayment(
+            request.getOrderId(), request.getAmount(), request.getPaymentMethod());
     return ResponseEntity.ok(PaymentResponse.from(payment));
   }
 

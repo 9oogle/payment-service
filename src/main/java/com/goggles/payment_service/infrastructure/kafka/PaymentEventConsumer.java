@@ -15,34 +15,34 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PaymentEventConsumer {
 
-    private final PaymentService paymentService;
-    private final ObjectMapper objectMapper;
+  private final PaymentService paymentService;
+  private final ObjectMapper objectMapper;
 
-    // 주문 서비스 이벤트 포틱 확정 후 수정 필요
-    @KafkaListener(topics = "order-payment-requested", groupId = "payment-service")
-    @IdempotentConsumer("order-payment-requested")
-    public void handlePaymentRequested(ConsumerRecord<String, String> record) {
-        try {
-            log.info("주문 결제 요청 이벤트 수신, key: {}", record.key());
+  // 주문 서비스 이벤트 포틱 확정 후 수정 필요
+  @KafkaListener(topics = "order-payment-requested", groupId = "payment-service")
+  @IdempotentConsumer("order-payment-requested")
+  public void handlePaymentRequested(ConsumerRecord<String, String> record) {
+    try {
+      log.info("주문 결제 요청 이벤트 수신, key: {}", record.key());
 
-            OrderEventDto event = objectMapper.readValue(record.value(), OrderEventDto.class);
+      OrderEventDto event = objectMapper.readValue(record.value(), OrderEventDto.class);
 
-            if (event.getOrderID() == null) {
-                throw new IllegalArgumentException("orderId는 필수입니다.");
-            }
-            if (event.getAmount() == null) {
-                throw new IllegalArgumentException("amount는 0원 이상이어야 합니다.");
-            }
-            if (event.getPaymentMethod() == null || event.getPaymentMethod().isBlank()) {
-                throw new IllegalArgumentException("paymentMethod는 필수입니다.");
-            }
+      if (event.getOrderID() == null) {
+        throw new IllegalArgumentException("orderId는 필수입니다.");
+      }
+      if (event.getAmount() == null) {
+        throw new IllegalArgumentException("amount는 0원 이상이어야 합니다.");
+      }
+      if (event.getPaymentMethod() == null || event.getPaymentMethod().isBlank()) {
+        throw new IllegalArgumentException("paymentMethod는 필수입니다.");
+      }
 
-            PaymentMethod method = PaymentMethod.valueOf(event.getPaymentMethod());
-            paymentService.createPayment(event.getOrderID(), event.getAmount(), method);
+      PaymentMethod method = PaymentMethod.valueOf(event.getPaymentMethod());
+      paymentService.createPayment(event.getOrderID(), event.getAmount(), method);
 
-        } catch (Exception e ) {
-            log.error("주문 결제 요청 이벤트 처리 실패, key: {}, error: {}", record.key(), e.getMessage());
-            throw new RuntimeException(e);
-        }
+    } catch (Exception e) {
+      log.error("주문 결제 요청 이벤트 처리 실패, key: {}, error: {}", record.key(), e.getMessage());
+      throw new RuntimeException(e);
     }
+  }
 }

@@ -2,7 +2,6 @@ package com.goggles.payment_service.application;
 
 import com.goggles.payment_service.domain.Payment;
 import com.goggles.payment_service.domain.PaymentMethod;
-
 import java.util.UUID;
 
 public interface PaymentService {

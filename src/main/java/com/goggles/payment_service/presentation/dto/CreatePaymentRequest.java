@@ -3,9 +3,8 @@ package com.goggles.payment_service.presentation.dto;
 import com.goggles.payment_service.domain.PaymentMethod;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-
 import java.util.UUID;
+import lombok.Getter;
 
 @Getter
 public class CreatePaymentRequest {

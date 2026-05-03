@@ -2,12 +2,11 @@ package com.goggles.payment_service.domain;
 
 import com.goggles.common.domain.BaseTime;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Getter
@@ -94,5 +93,4 @@ public class Payment extends BaseTime {
     this.status = PaymentStatus.CANCEL;
     this.paymentLog = paymentLog;
   }
-
 }
