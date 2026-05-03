@@ -5,21 +5,23 @@ spring:
   application:
     name: payment-service
   config:
-    import: optional:file:C:/spring/payment/application-local.yml
+    import: optional:file:${CONFIG_PATH}
   datasource:
-#    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/goggles
-    username: postgres
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
     driver-class-name: org.postgresql.Driver
   jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        show_sql: true
+        format_sql: true
+        use_sql_comments: true
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    generate-ddl: true
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     consumer:
       group-id: payment-service
       auto-offset-reset: earliest
@@ -36,7 +38,7 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
     service-url:
-      defaultZone: http://localhost:9001/eureka/,http://localhost:9002/eureka/
+      defaultZone: ${EUREKA_DEFAULT_ZONE}
 
 toss:
   secret-key: ${TOSS_SECRET_KEY:}
@@ -58,4 +60,10 @@ management:
       probability: 0.1
   zipkin:
     tracing:
-      endpoint: http://34.50.39.161:9411/api/v2/spans
+      endpoint: ${ZIPKIN_ENDPOINT}
+
+# 로그 설정
+logging:
+  level:
+    org.hibernate.type: trace
+    org.hibernate.orm.jdbc.bind: trace
