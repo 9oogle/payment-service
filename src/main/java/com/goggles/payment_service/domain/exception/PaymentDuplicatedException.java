@@ -1,7 +1,6 @@
 package com.goggles.payment_service.domain.exception;
 
 import com.goggles.common.exception.ConflictException;
-
 import java.util.UUID;
 
 public class PaymentDuplicatedException extends ConflictException {

@@ -3,13 +3,12 @@ package com.goggles.payment_service.domain;
 import com.goggles.payment_service.domain.exception.PaymentInvalidException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.springframework.util.StringUtils;
-
-import java.util.UUID;
 
 @Getter
 @ToString
@@ -17,52 +16,55 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OrderDetail {
 
-    @Column(length = 45, nullable = false, unique = true)
-    private UUID orderId;
+  @Column(length = 45, nullable = false, unique = true)
+  private UUID orderId;
 
-    @Column(length = 100, nullable = false)
-    private String productName;
+  @Column(length = 100, nullable = false)
+  private String productName;
 
-    private Long orderPrice;
+  private Long orderPrice;
 
-    private UUID customerId;
-    private String customerName;
-    private String customerEmail;
+  private UUID customerId;
+  private String customerName;
+  private String customerEmail;
 
-    /**
-     *1. 주문번호, 주문상품, 금액은 필수 입력 값
-     */
-    protected OrderDetail(UUID orderId, String productName, Long orderPrice,
-                          UUID customerId, String customerName, String customerEmail) {
-        if (orderId == null) {
-            throw new PaymentInvalidException("주문 ID는 필수 입니다.");
-        }
-
-        if (!StringUtils.hasText(productName)) {
-            throw new PaymentInvalidException("주문 상품은 필수 입력값입니다.");
-        }
-
-        if (orderPrice <= 0) {
-            throw new PaymentInvalidException("결제 금액이 유효하지 않습니다.");
-        }
-
-        if (customerId == null) {
-            throw new PaymentInvalidException("주문자 ID는 필수 입력값 입니다.");
-        }
-
-        if (!StringUtils.hasText(customerName)) {
-            throw new PaymentInvalidException("주문자명은 필수 입력값 입니다.");
-        }
-
-        if (!StringUtils.hasText(customerEmail)) {
-            throw new PaymentInvalidException("주문자 이메일은 필수 입력값 입니다.");
-        }
-
-        this.orderId = orderId;
-        this.productName = productName;
-        this.orderPrice = orderPrice;
-        this.customerId = customerId;
-        this.customerName = customerName;
-        this.customerEmail = customerEmail;
+  /** 1. 주문번호, 주문상품, 금액은 필수 입력 값 */
+  protected OrderDetail(
+      UUID orderId,
+      String productName,
+      Long orderPrice,
+      UUID customerId,
+      String customerName,
+      String customerEmail) {
+    if (orderId == null) {
+      throw new PaymentInvalidException("주문 ID는 필수 입니다.");
     }
+
+    if (!StringUtils.hasText(productName)) {
+      throw new PaymentInvalidException("주문 상품은 필수 입력값입니다.");
+    }
+
+    if (orderPrice <= 0) {
+      throw new PaymentInvalidException("결제 금액이 유효하지 않습니다.");
+    }
+
+    if (customerId == null) {
+      throw new PaymentInvalidException("주문자 ID는 필수 입력값 입니다.");
+    }
+
+    if (!StringUtils.hasText(customerName)) {
+      throw new PaymentInvalidException("주문자명은 필수 입력값 입니다.");
+    }
+
+    if (!StringUtils.hasText(customerEmail)) {
+      throw new PaymentInvalidException("주문자 이메일은 필수 입력값 입니다.");
+    }
+
+    this.orderId = orderId;
+    this.productName = productName;
+    this.orderPrice = orderPrice;
+    this.customerId = customerId;
+    this.customerName = customerName;
+    this.customerEmail = customerEmail;
+  }
 }

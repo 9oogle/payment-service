@@ -4,27 +4,23 @@ import com.goggles.payment_service.domain.Payment;
 import com.goggles.payment_service.domain.QPayment;
 import com.goggles.payment_service.domain.query.PaymentQueryRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
-
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
 public class PaymentQueryRepositoryImpl implements PaymentQueryRepository {
 
-    private final JPAQueryFactory queryFactory;
+  private final JPAQueryFactory queryFactory;
 
-    @Override
-    public Optional<Payment> findByOrderId(UUID orderId) {
+  @Override
+  public Optional<Payment> findByOrderId(UUID orderId) {
 
-        QPayment payment = QPayment.payment;
+    QPayment payment = QPayment.payment;
 
-        return Optional.ofNullable(
-                queryFactory.selectFrom(payment)
-                        .where(payment.orderDetail.orderId.eq(orderId))
-                        .fetchOne()
-        );
-    }
+    return Optional.ofNullable(
+        queryFactory.selectFrom(payment).where(payment.orderDetail.orderId.eq(orderId)).fetchOne());
+  }
 }

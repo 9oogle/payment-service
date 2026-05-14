@@ -5,6 +5,5 @@ import com.goggles.payment_service.domain.PaymentId;
 import com.goggles.payment_service.domain.PaymentRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface JpaPaymentRepository extends PaymentRepository, JpaRepository<Payment, PaymentId> {
-
-}
+public interface JpaPaymentRepository
+    extends PaymentRepository, JpaRepository<Payment, PaymentId> {}

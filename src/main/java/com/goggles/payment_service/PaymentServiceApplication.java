@@ -1,6 +1,8 @@
 package com.goggles.payment_service;
 
 import com.goggles.config.event.EventConfig;
+import java.util.Optional;
+import java.util.UUID;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -12,9 +14,6 @@ import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.util.Optional;
-import java.util.UUID;
 
 @Import(EventConfig.class)
 @SpringBootApplication(scanBasePackages = {"com.goggles"})

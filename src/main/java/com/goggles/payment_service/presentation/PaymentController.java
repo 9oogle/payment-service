@@ -6,6 +6,8 @@ import com.goggles.payment_service.application.query.PaymentQueryService;
 import com.goggles.payment_service.infrastructure.security.UserDetailsImpl;
 import com.goggles.payment_service.presentation.dto.PaymentRequest;
 import com.goggles.payment_service.presentation.dto.PaymentResponse;
+import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,63 +15,59 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-import java.util.UUID;
-
 @Slf4j
 @Controller
 @RequiredArgsConstructor
 public class PaymentController {
 
-    private final PaymentQueryService paymentQueryService;
-    private final PaymentService paymentService;
+  private final PaymentQueryService paymentQueryService;
+  private final PaymentService paymentService;
 
-    @ResponseBody
-    @GetMapping("/{orderId}/detail")
-    public PaymentResponse.PaymentInfo getPayment(@PathVariable("orderId") UUID orderId) {
-        return PaymentResponse.PaymentInfo.from(paymentQueryService.getPayment(orderId));
-    }
+  @ResponseBody
+  @GetMapping("/{orderId}/detail")
+  public PaymentResponse.PaymentInfo getPayment(@PathVariable("orderId") UUID orderId) {
+    return PaymentResponse.PaymentInfo.from(paymentQueryService.getPayment(orderId));
+  }
 
-    @ResponseBody
-    @GetMapping("/success")
-    public PaymentResponse.PaymentApprove approvePayment(PaymentRequest.Success success) {
-        PaymentQueryResult result = paymentQueryService.getPayment(success.orderId());
-        paymentService.approvePayment(result.paymentId(), success.paymentKey());
+  @ResponseBody
+  @GetMapping("/success")
+  public PaymentResponse.PaymentApprove approvePayment(PaymentRequest.Success success) {
+    PaymentQueryResult result = paymentQueryService.getPayment(success.orderId());
+    paymentService.approvePayment(result.paymentId(), success.paymentKey());
 
-        return new PaymentResponse.PaymentApprove(result.paymentId());
-    }
+    return new PaymentResponse.PaymentApprove(result.paymentId());
+  }
 
-    @ResponseBody
-    @PostMapping("/{orderId}/cancel")
-    public PaymentResponse.PaymentCancel cancelPayment(@PathVariable("orderId") UUID orderId, @RequestBody PaymentRequest.Cancel request) {
-        PaymentQueryResult result = paymentQueryService.getPayment(orderId);
-        paymentService.cancelPayment(result.paymentId(), request.reason(), false);
+  @ResponseBody
+  @PostMapping("/{orderId}/cancel")
+  public PaymentResponse.PaymentCancel cancelPayment(
+      @PathVariable("orderId") UUID orderId, @RequestBody PaymentRequest.Cancel request) {
+    PaymentQueryResult result = paymentQueryService.getPayment(orderId);
+    paymentService.cancelPayment(result.paymentId(), request.reason(), false);
 
-        return new PaymentResponse.PaymentCancel(result.paymentId());
-    }
+    return new PaymentResponse.PaymentCancel(result.paymentId());
+  }
 
-    @GetMapping("/failure")
-    public String paymentFailure(@ModelAttribute("data") PaymentRequest.Failure failure) {
-        return "demo/failure";
-    }
+  @GetMapping("/failure")
+  public String paymentFailure(@ModelAttribute("data") PaymentRequest.Failure failure) {
+    return "demo/failure";
+  }
 
-    @GetMapping("/demo/{orderId}")
-    public String paymentDemo(@PathVariable("orderId") UUID orderId, Model model) {
-        PaymentQueryResult result = paymentQueryService.getPayment(orderId);
-        log.info("result: {}", result);
-        model.addAllAttributes(
-                Map.of(
-                        "orderId", result.orderId(),
-                        "amount", result.amount(),
-                        "orderName", result.orderName()
-                )
-        );
-        return "demo/index";
-    }
+  @GetMapping("/demo/{orderId}")
+  public String paymentDemo(@PathVariable("orderId") UUID orderId, Model model) {
+    PaymentQueryResult result = paymentQueryService.getPayment(orderId);
+    log.info("result: {}", result);
+    model.addAllAttributes(
+        Map.of(
+            "orderId", result.orderId(),
+            "amount", result.amount(),
+            "orderName", result.orderName()));
+    return "demo/index";
+  }
 
-    @GetMapping("/test")
-    @ResponseBody
-    public void test(@AuthenticationPrincipal UserDetailsImpl user) {
-        log.info("logged User: {}", user);
-    }
+  @GetMapping("/test")
+  @ResponseBody
+  public void test(@AuthenticationPrincipal UserDetailsImpl user) {
+    log.info("logged User: {}", user);
+  }
 }

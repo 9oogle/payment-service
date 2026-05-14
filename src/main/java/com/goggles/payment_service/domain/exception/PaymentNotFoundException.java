@@ -1,7 +1,6 @@
 package com.goggles.payment_service.domain.exception;
 
 import com.goggles.common.exception.NotFoundException;
-
 import java.util.UUID;
 
 public class PaymentNotFoundException extends NotFoundException {

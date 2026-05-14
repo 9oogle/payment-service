@@ -6,6 +6,7 @@ import com.goggles.payment_service.application.PaymentService;
 import com.goggles.payment_service.domain.Payment;
 import com.goggles.payment_service.domain.query.PaymentQueryRepository;
 import com.goggles.payment_service.infrastructure.listener.dto.OrderPaymentCancel;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -13,50 +14,49 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class OrderPaymentCancelListener {
 
-    private final PaymentQueryRepository queryRepository;
-    private final PaymentService paymentService;
-    private final ObjectMapper objectMapper;
+  private final PaymentQueryRepository queryRepository;
+  private final PaymentService paymentService;
+  private final ObjectMapper objectMapper;
 
-    @IdempotentConsumer("topics-order-payment-canceled")
-    @KafkaListener(topics = "${topics.order.payment-canceled}", groupId = "payment-service")
-    public void onReceived(Message<String> message, Acknowledgment ack) throws Exception {
+  @IdempotentConsumer("topics-order-payment-canceled")
+  @KafkaListener(topics = "${topics.order.payment-canceled}", groupId = "payment-service")
+  public void onReceived(Message<String> message, Acknowledgment ack) throws Exception {
 
-        log.info("메세지 수신 - 메세지: {}", message.getPayload());
+    log.info("메세지 수신 - 메세지: {}", message.getPayload());
 
-        try {
+    try {
 
-            OrderPaymentCancel data = objectMapper.readValue(message.getPayload(), OrderPaymentCancel.class);
+      OrderPaymentCancel data =
+          objectMapper.readValue(message.getPayload(), OrderPaymentCancel.class);
 
-            UUID orderId = data.orderId(); // 주문ID로 결제 정보 조회
-            String reason = "[%s]%s".formatted(data.cancelReason(), data.cancelDescription());
+      UUID orderId = data.orderId(); // 주문ID로 결제 정보 조회
+      String reason = "[%s]%s".formatted(data.cancelReason(), data.cancelDescription());
 
-            Payment payment = OrderPaymentHelper.getPayment(orderId, queryRepository);
+      Payment payment = OrderPaymentHelper.getPayment(orderId, queryRepository);
 
-            paymentService.cancelPayment(payment.getPaymentId().getId(), reason, true);
+      paymentService.cancelPayment(payment.getPaymentId().getId(), reason, true);
 
-            ack.acknowledge();
+      ack.acknowledge();
 
-            log.info("결제 취소 성공 - 결제 ID: {}, 주문 ID: {}", payment.getPaymentId().getId(), orderId);
+      log.info("결제 취소 성공 - 결제 ID: {}, 주문 ID: {}", payment.getPaymentId().getId(), orderId);
 
-        } catch (Exception e) {
-            log.error("결제 취소 실패 - 사유: {}", e.getMessage(), e);
-            throw e;
-        }
+    } catch (Exception e) {
+      log.error("결제 취소 실패 - 사유: {}", e.getMessage(), e);
+      throw e;
     }
+  }
 
-    @KafkaListener(topics = "${topics.order.payment-canceled}-dlt", groupId = "payment-service")
-    public void handleDLT(Message<String> message, Acknowledgment ack) {
-        log.error("결제 취소 완전 실패, DLT 수신 - 메세지: {}", message.getPayload());
+  @KafkaListener(topics = "${topics.order.payment-canceled}-dlt", groupId = "payment-service")
+  public void handleDLT(Message<String> message, Acknowledgment ack) {
+    log.error("결제 취소 완전 실패, DLT 수신 - 메세지: {}", message.getPayload());
 
-        // 수동 처리
+    // 수동 처리
 
-        ack.acknowledge();
-    }
+    ack.acknowledge();
+  }
 }

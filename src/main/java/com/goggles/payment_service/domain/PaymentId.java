@@ -2,9 +2,8 @@ package com.goggles.payment_service.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import lombok.*;
-
 import java.util.UUID;
+import lombok.*;
 
 @Getter
 @ToString
@@ -13,14 +12,14 @@ import java.util.UUID;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class PaymentId {
 
-    @Column(name="payment_id", length = 45)
-    private UUID id;
+  @Column(name = "payment_id", length = 45)
+  private UUID id;
 
-    public static PaymentId of(UUID id) {
-        return new PaymentId(id);
-    }
+  public static PaymentId of(UUID id) {
+    return new PaymentId(id);
+  }
 
-    public static PaymentId of() {
-        return of(UUID.randomUUID());
-    }
+  public static PaymentId of() {
+    return of(UUID.randomUUID());
+  }
 }

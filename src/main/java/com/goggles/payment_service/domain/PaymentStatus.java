@@ -33,11 +33,9 @@ public enum PaymentStatus {
           possible = false;
         }
       }
-
     }
     if (!possible) {
       throw new PaymentTransitionException(currentStatus, newStatus);
     }
   }
-
 }
