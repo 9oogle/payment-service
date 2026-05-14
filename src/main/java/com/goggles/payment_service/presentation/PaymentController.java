@@ -1,46 +1,75 @@
 package com.goggles.payment_service.presentation;
 
 import com.goggles.payment_service.application.PaymentService;
-import com.goggles.payment_service.domain.Payment;
-import com.goggles.payment_service.presentation.dto.ConfirmPaymentRequest;
-import com.goggles.payment_service.presentation.dto.CreatePaymentRequest;
+import com.goggles.payment_service.application.query.PaymentQueryResult;
+import com.goggles.payment_service.application.query.PaymentQueryService;
+import com.goggles.payment_service.infrastructure.security.UserDetailsImpl;
+import com.goggles.payment_service.presentation.dto.PaymentRequest;
 import com.goggles.payment_service.presentation.dto.PaymentResponse;
-import jakarta.validation.Valid;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
-@RequestMapping("/api/v1/payments")
+import java.util.Map;
+import java.util.UUID;
+
+@Slf4j
+@Controller
 @RequiredArgsConstructor
 public class PaymentController {
 
-  private final PaymentService paymentService;
+    private final PaymentQueryService paymentQueryService;
+    private final PaymentService paymentService;
 
-  // 결제 생성
-  @PostMapping
-  public ResponseEntity<PaymentResponse> createPayment(
-      @Valid @RequestBody CreatePaymentRequest request) {
-    Payment payment =
-        paymentService.createPayment(
-            request.getOrderId(), request.getAmount(), request.getPaymentMethod());
-    return ResponseEntity.ok(PaymentResponse.from(payment));
-  }
+    @ResponseBody
+    @GetMapping("/{orderId}/detail")
+    public PaymentResponse.PaymentInfo getPayment(@PathVariable("orderId") UUID orderId) {
+        return PaymentResponse.PaymentInfo.from(paymentQueryService.getPayment(orderId));
+    }
 
-  // 결제 승인
-  @PostMapping("/{paymentId}/confirm")
-  public ResponseEntity<PaymentResponse> confirmPayment(
-      @PathVariable UUID paymentId, @Valid @RequestBody ConfirmPaymentRequest request) {
-    Payment payment = paymentService.confirmPayment(paymentId, request.getPaymentKey());
-    return ResponseEntity.ok(PaymentResponse.from(payment));
-  }
+    @ResponseBody
+    @GetMapping("/success")
+    public PaymentResponse.PaymentApprove approvePayment(PaymentRequest.Success success) {
+        PaymentQueryResult result = paymentQueryService.getPayment(success.orderId());
+        paymentService.approvePayment(result.paymentId(), success.paymentKey());
 
-  // 결제 취소
-  @PostMapping("/{paymentId}/cancel")
-  public ResponseEntity<PaymentResponse> cancelPayment(
-      @PathVariable UUID paymentId, @RequestParam String cancelReason) {
-    Payment payment = paymentService.cancelPayment(paymentId, cancelReason);
-    return ResponseEntity.ok(PaymentResponse.from(payment));
-  }
+        return new PaymentResponse.PaymentApprove(result.paymentId());
+    }
+
+    @ResponseBody
+    @PostMapping("/{orderId}/cancel")
+    public PaymentResponse.PaymentCancel cancelPayment(@PathVariable("orderId") UUID orderId, @RequestBody PaymentRequest.Cancel request) {
+        PaymentQueryResult result = paymentQueryService.getPayment(orderId);
+        paymentService.cancelPayment(result.paymentId(), request.reason(), false);
+
+        return new PaymentResponse.PaymentCancel(result.paymentId());
+    }
+
+    @GetMapping("/failure")
+    public String paymentFailure(@ModelAttribute("data") PaymentRequest.Failure failure) {
+        return "demo/failure";
+    }
+
+    @GetMapping("/demo/{orderId}")
+    public String paymentDemo(@PathVariable("orderId") UUID orderId, Model model) {
+        PaymentQueryResult result = paymentQueryService.getPayment(orderId);
+        log.info("result: {}", result);
+        model.addAllAttributes(
+                Map.of(
+                        "orderId", result.orderId(),
+                        "amount", result.amount(),
+                        "orderName", result.orderName()
+                )
+        );
+        return "demo/index";
+    }
+
+    @GetMapping("/test")
+    @ResponseBody
+    public void test(@AuthenticationPrincipal UserDetailsImpl user) {
+        log.info("logged User: {}", user);
+    }
 }

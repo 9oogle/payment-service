@@ -1,69 +1,22 @@
 spring:
-  security:
-    user:
-      password: none
   application:
     name: payment-service
+
   config:
-    import: optional:file:${CONFIG_PATH}
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    properties:
-      hibernate:
-        show_sql: true
-        format_sql: true
-        use_sql_comments: true
-    hibernate:
-      ddl-auto: update
-    open-in-view: false
-    generate-ddl: true
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
-    consumer:
-      group-id: payment-service
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    import:
+      - "optional:configserver: "
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: config-server
 
 eureka:
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: false
+    hostname: ${HOSTNAME:localhost}
   client:
     register-with-eureka: true
     fetch-registry: true
     service-url:
-      defaultZone: ${EUREKA_DEFAULT_ZONE}
-
-toss:
-  secret-key: ${TOSS_SECRET_KEY:}
-  base-url: https://api.tosspayments.com/v1/payments
-
-server:
-  port: 9008
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health, info, prometheus
-  metrics:
-    tags:
-      application: ${spring.application.name}
-  tracing:
-    sampling:
-      probability: 0.1
-  zipkin:
-    tracing:
-      endpoint: ${ZIPKIN_ENDPOINT}
-
-# 로그 설정
-logging:
-  level:
-    org.hibernate.type: trace
-    org.hibernate.orm.jdbc.bind: trace
+      defaultZone: http://${EURKA_SERVER_URL1:localhost}:9001/eureka/,http://${EUREKA_SERVER_URL2:localhost}:9002/eureka/

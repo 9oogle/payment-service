@@ -19,8 +19,12 @@ repositories {
     maven {
         url = uri("https://maven.pkg.github.com/9oogle/common-library")
         credentials {
-            username = providers.gradleProperty("GitHubPackagesUsername").get()
-            password = providers.gradleProperty("GitHubPackagesPassword").get()
+            username = providers.gradleProperty("GitHubPackagesUsername")
+                .orElse(providers.environmentVariable("GITHUB_ACTOR"))
+                .getOrElse("")
+            password = providers.gradleProperty("GitHubPackagesPassword")
+                .orElse(providers.environmentVariable("GITHUB_TOKEN"))
+                .getOrElse("")
         }
     }
 }
@@ -32,8 +36,14 @@ dependencyManagement {
 }
 
 dependencies {
+    // Thymeleaf
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+
     // ── 공용 라이브러리 ───────────────────────────────
     implementation("com.goggles:common-library:1.0.3")
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+    implementation("org.springframework.cloud:spring-cloud-starter-config")
+    implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
 
     implementation ("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -53,6 +63,11 @@ dependencies {
 
     // ── JPA (소비자가 Spring Data JPA 를 사용한다고 가정) ────────────────────
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("com.querydsl:querydsl-jpa:5.1.0:jakarta")
+    annotationProcessor("com.querydsl:querydsl-apt:5.1.0:jakarta")
+
+    annotationProcessor("jakarta.annotation:jakarta.annotation-api")
+    annotationProcessor("jakarta.persistence:jakarta.persistence-api")
 
     // ── Spring Web/MVC (GlobalExceptionHandler 용) ───────────────────────────
     implementation("org.springframework:spring-web")
@@ -86,8 +101,6 @@ dependencies {
     testRuntimeOnly("com.h2database:h2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    runtimeOnly("com.h2database:h2")
-
     runtimeOnly("org.postgresql:postgresql")
 }
 
@@ -97,5 +110,25 @@ tasks.named<Test>("test") {
 spotless {
     java {
         googleJavaFormat()
+    }
+}
+
+val querydslDir = "src/main/generated"
+
+tasks.withType<JavaCompile> {
+    options.generatedSourceOutputDirectory.set(file(querydslDir))
+}
+
+sourceSets {
+    getByName("main") {
+        java {
+            srcDirs(querydslDir)
+        }
+    }
+}
+
+tasks.named("clean") {
+    doLast {
+        delete(file(querydslDir))
     }
 }

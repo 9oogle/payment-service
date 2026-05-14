@@ -1,38 +1,50 @@
 package com.goggles.payment_service.presentation.dto;
 
-import com.goggles.payment_service.domain.Payment;
-import com.goggles.payment_service.domain.PaymentMethod;
-import com.goggles.payment_service.domain.PaymentStatus;
+import com.goggles.payment_service.application.query.PaymentQueryResult;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
-import lombok.Getter;
 
-@Getter
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class PaymentResponse {
 
-  private final UUID id;
-  private final UUID orderId;
-  private final Long amount;
-  private final PaymentStatus status;
-  private final PaymentMethod method;
-  private final String transactionId;
-  private final String failReason;
-  private final LocalDateTime paidAt;
-  private final String paymentLog;
+    @Builder
+    public record PaymentInfo(
+            UUID paymentId,
+            String status,
+            UUID orderId,
+            long amount,
+            String orderName,
+            String paymentKey,
+            String paymentMethod,
+            LocalDateTime paidAt,
+            String cancelReason,
+            LocalDateTime canceledAt
+    ) {
+        public static PaymentInfo from(PaymentQueryResult result) {
+            return PaymentInfo.builder()
+                    .paymentId(result.paymentId())
+                    .status(result.status())
+                    .orderId(result.orderId())
+                    .amount(result.amount())
+                    .orderName(result.orderName())
+                    .paymentKey(result.paymentKey())
+                    .paymentMethod(result.paymentMethod())
+                    .paidAt(result.paidAt())
+                    .cancelReason(result.cancelReason())
+                    .canceledAt(result.canceledAt())
+                    .build();
+        }
+    }
 
-  private PaymentResponse(Payment payment) {
-    this.id = payment.getId();
-    this.orderId = payment.getOrderId();
-    this.amount = payment.getAmount().getAmount();
-    this.status = payment.getStatus();
-    this.method = payment.getMethod();
-    this.transactionId = payment.getTransactionId();
-    this.failReason = payment.getFailReason();
-    this.paidAt = payment.getPaidAt();
-    this.paymentLog = payment.getPaymentLog();
-  }
+    public record PaymentApprove(
+            UUID paymentId
+    ) {}
 
-  public static PaymentResponse from(Payment payment) {
-    return new PaymentResponse(payment);
-  }
+    public record PaymentCancel(
+            UUID paymentId
+    ){}
 }

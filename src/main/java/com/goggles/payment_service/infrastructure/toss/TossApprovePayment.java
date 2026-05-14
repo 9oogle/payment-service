@@ -1,84 +1,82 @@
 package com.goggles.payment_service.infrastructure.toss;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.goggles.payment_service.domain.OrderDetail;
+import com.goggles.payment_service.domain.PaymentId;
+import com.goggles.payment_service.domain.PaymentStatus;
 import com.goggles.payment_service.domain.service.ApprovePayment;
 import com.goggles.payment_service.domain.service.ApproveResult;
+import com.goggles.payment_service.infrastructure.toss.client.TossClient;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientResponseException;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class TossApprovePayment implements ApprovePayment {
 
-  private final TossApiHelper tossApiHelper;
+    private final TossClient tossClient;
 
-  @Override
-  public ApproveResult request(String paymentId, String paymentKey, String orderId, Long amount) {
-    RestClient restClient = tossApiHelper.getRestClient();
+    @Override
+    public ApproveResult request(PaymentId paymentId, String paymentKey, OrderDetail orderDetail) {
+        // 멱등키
+        String idempotencyKey = paymentId.getId().toString() + "-approve";
 
-    log.info("토스 결제 승인 요청 시작, 주문 ID: {}, Payment Key: {}, 결제금액: {}", orderId, paymentKey, amount);
+        // 주문 ID
+        String orderId = orderDetail.getOrderId().toString();
+        ResponseEntity<JsonNode> res = tossClient.approve(idempotencyKey, Map.of(
+                "paymentKey", paymentKey,
+                "orderId", orderId,
+                "amount", orderDetail.getOrderPrice()
+        ));
 
-    try {
-      JsonNode result =
-          restClient
-              .post()
-              .uri(uriBuilder -> uriBuilder.path("/confirm").build())
-              .body(
-                  Map.of(
-                      "paymentKey", paymentKey,
-                      "orderId", orderId,
-                      "amount", amount))
-              .header("Idempotency-Key", paymentId)
-              .retrieve()
-              .body(JsonNode.class);
+        // 응답 Body
+        JsonNode node = res.getBody();
 
-      LocalDateTime approvedAt = null;
-      if (result != null && result.get("approvedAt") != null) {
-        approvedAt =
-            LocalDateTime.parse(result.get("approvedAt").asText(), DateTimeFormatter.ISO_DATE_TIME);
-      }
 
-      log.info("토스 결제 승인 성공, 주문 ID:{}, Payment Key: {}", orderId, paymentKey);
+        if (res.getStatusCode().is2xxSuccessful()) {
+            // 성공: 결제 상태
+            PaymentStatus status = PaymentStatus.valueOf(node.get("status").asText());
 
-      return ApproveResult.builder()
-          .success(true)
-          .paymentKey(paymentKey)
-          .approveAt(approvedAt)
-          .paymentLog(tossApiHelper.parseLog(result))
-          .build();
+            // 승인 일시
+            LocalDateTime paidAt = LocalDateTime.parse(node.get("approvedAt").asText(), DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 
-    } catch (RestClientResponseException e) {
-      JsonNode result = e.getResponseBodyAs(JsonNode.class);
-      String code = tossApiHelper.parseCode(result);
-      String message = tossApiHelper.parseMessage(result);
+            // 승인된 결제금액
+            long approvedAmount = node.get("totalAmount").asLong();
 
-      log.error(
-          "토스 결제 승인 실패, HTTP 상태코드: {}, 주문 ID: {}, 에러코드: {}, 에러메세지: {}",
-          e.getStatusCode().value(),
-          orderId,
-          code,
-          message);
+            // 결제 수단
+            String method = node.get("method").asText();
 
-      return ApproveResult.builder()
-          .success(false)
-          .failReason("[%s]%s".formatted(code, message))
-          .paymentLog(tossApiHelper.parseLog(result))
-          .build();
+            log.info("토스 결제 승인 성공 - HTTP 상태코드: {}, 주문 ID: {}, 결제 ID: {}, PaymentKey: {}, 결제금액: {}, 결제수단: {}, 승인상태: {}, 승인일시: {}",
+                   res.getStatusCode(), orderId, paymentId.getId(), paymentKey, approvedAmount, method, "%s(%s)".formatted(status, status.getDescription()), paidAt);
 
-    } catch (Exception e) {
-      log.error("토스 결제 승인 실패, 주문 Id: {}, 에러메세지: {}", orderId, e.getMessage());
+            return  ApproveResult.builder()
+                    .success(true)
+                    .status(status)
+                    .paidAt(paidAt)
+                    .approvedAmount(approvedAmount)
+                    .paymentKey(paymentKey)
+                    .method(method)
+                    .paymentLog(node.toString())
+                    .build();
+        }
 
-      return ApproveResult.builder()
-          .success(false)
-          .failReason("[UNKNOWN]" + e.getMessage())
-          .build();
+        // 실패
+        String reason = node.get("code") == null ? "[Unknown]알수없는 예외발생" :
+                "[%s]%s".formatted(node.get("code").asText(), node.get("message").asText());
+
+        log.error("토스 결제 승인 실패 - HTTP 상태코드: {},주문 ID: {}, 결제 ID: {}, PaymentKey: {}, 결제금액: {}, 사유: {}",
+                res.getStatusCode(), orderId, PaymentId.of().getId(), paymentKey, orderDetail.getOrderPrice(), reason);
+
+        return ApproveResult.builder()
+                .success(false)
+                .reason(reason)
+                .build();
     }
-  }
 }
