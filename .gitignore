@@ -3,3 +3,4 @@ build/
 .gradle/
 *.jar
 *.jks
+/src/main/generated/
