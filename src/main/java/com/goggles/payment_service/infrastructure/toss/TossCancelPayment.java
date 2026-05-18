@@ -1,67 +1,55 @@
 package com.goggles.payment_service.infrastructure.toss;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.goggles.payment_service.domain.PaymentId;
 import com.goggles.payment_service.domain.service.CancelPayment;
 import com.goggles.payment_service.domain.service.CancelResult;
+import com.goggles.payment_service.infrastructure.toss.client.TossClient;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientResponseException;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class TossCancelPayment implements CancelPayment {
 
-  private final TossApiHelper tossApiHelper;
+  private final TossClient client;
 
   @Override
-  public CancelResult cancel(String paymentId, String paymentKey, String cancelReason) {
-    RestClient restClient = tossApiHelper.getRestClient();
-    String idempotencyKey = paymentId + "-cancel";
+  public CancelResult cancel(PaymentId paymentId, String paymentKey, String cancelReason) {
 
-    log.info("토스 결제 취소 요청 시작, Payment Key: {}", paymentKey);
+    // 멱등성키
+    String idempotencyKey = paymentId.getId().toString() + "-cancel";
 
-    try {
-      JsonNode result =
-          restClient
-              .post()
-              .uri(uriBuilder -> uriBuilder.path("/{paymentKey}/cancel").build(paymentKey))
-              .header("idempotency-Key", idempotencyKey)
-              .body(Map.of("cancelReason", cancelReason))
-              .retrieve()
-              .body(JsonNode.class);
+    ResponseEntity<JsonNode> res =
+        client.cancel(paymentKey, idempotencyKey, Map.of("cancelReason", cancelReason));
 
-      log.info("토스 결제 취소 성공, Payment Key: {}", paymentKey);
+    JsonNode node = res.getBody();
+    if (res.getStatusCode().is2xxSuccessful()) {
+      // 취소 성공
+      log.info("토스 결제 취소 성공 - 결제 ID: {}, PaymentKey: {}", paymentId.getId(), paymentKey);
+
       return CancelResult.builder()
           .success(true)
-          .paymentLog(result != null ? result.toString() : null)
+          .paymentLog(node == null ? null : toString())
           .build();
-    } catch (RestClientResponseException e) {
-      JsonNode result = e.getResponseBodyAs(JsonNode.class);
-
-      String code = tossApiHelper.parseCode(result);
-      String message = tossApiHelper.parseMessage(result);
-
-      log.error(
-          "토스 결제 취소 실패, HTTP 상태코드: {}, Payment Key: {}, 에러코드: {}, 에러메세지: {}",
-          e.getStatusCode().value(),
-          paymentKey,
-          code,
-          message);
-
-      return CancelResult.builder()
-          .success(false)
-          .failReason("[%s]%s".formatted(code, message))
-          .paymentLog(tossApiHelper.parseLog(result))
-          .build();
-
-    } catch (Exception e) {
-      log.error("토스 결제 취소 실패, Payment Key: {}, 에러메세지: {}", paymentKey, e.getMessage());
-
-      return CancelResult.builder().success(false).failReason("[UNKNOWN]" + e.getMessage()).build();
     }
+
+    // 취소 실패
+    String reason =
+        node.get("code") == null
+            ? "[Unknown]알수없는 예외발생"
+            : "[%s]%s".formatted(node.get("code").asText(), node.get("message").asText());
+    log.error(
+        "토스 결제 취소 실패 - HTTP 상태코드: {}, 결제 ID: {}, PaymentKey: {}, 사유: {}",
+        res.getStatusCode(),
+        PaymentId.of().getId(),
+        paymentKey,
+        reason);
+
+    return CancelResult.builder().success(false).reason(reason).build();
   }
 }
